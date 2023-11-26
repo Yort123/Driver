@@ -8,7 +8,7 @@ public class NewTask {
 
     private final SimpleStringProperty todo;
     private final SimpleStringProperty completed;
-    private final SimpleStringProperty inProgress;
+
 
     private final LocalDate dueDate;
     private final String taskName;
@@ -18,7 +18,7 @@ public class NewTask {
     public NewTask(String taskName, LocalDate dueDate) {
         this.todo = new SimpleStringProperty("");
         this.completed = new SimpleStringProperty("");
-        this.inProgress = new SimpleStringProperty("");
+
         this.taskName = taskName;
         this.dueDate = dueDate;
         this.status = "To-Do"; // Initial status
@@ -50,9 +50,6 @@ public class NewTask {
         return completed;
     }
 
-    public SimpleStringProperty inProgressProperty() {
-        return inProgress;
-    }
 
     // Method to update the status based on the target column
     public void updateStatus(String targetColumnId) {
@@ -63,12 +60,13 @@ public class NewTask {
             case "completed":
                 status = "Completed";
                 break;
-            case "inProgress":
-                status = "In Progress";
-                break;
             default:
                 // Handle other cases or provide a default behavior
                 break;
         }
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

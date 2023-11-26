@@ -57,9 +57,8 @@
       </GridPane>
       <TableView fx:id="tableView" accessibleRole="CHECK_BOX" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="560.0" prefWidth="600.0" tableMenuButtonVisible="true">
          <columns>
-            <TableColumn fx:id="toDo" prefWidth="200.0" text="To-Do" />
-            <TableColumn fx:id="completed" prefWidth="200.0" text="Completed" />
-            <TableColumn fx:id="inProgress" prefWidth="200.0" text="In Progress" />
+            <TableColumn fx:id="toDo" prefWidth="300.0" text="To-Do" />
+            <TableColumn fx:id="completed" prefWidth="297.0" text="Completed" />
          </columns>
       </TableView>
    </children>

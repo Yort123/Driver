@@ -11,7 +11,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.*;
 import org.controlsfx.control.PropertySheet;
-
 import java.net.URL;
 import java.time.LocalDate;
 import javafx.scene.control.TableCell;
@@ -32,9 +31,6 @@ public class ToDoController implements Initializable {
     private TableColumn<NewTask, String> completed;
 
     @FXML
-    private TableColumn<NewTask, String> inProgress;
-
-    @FXML
     private TextField taskName;
 
     @FXML
@@ -45,13 +41,12 @@ public class ToDoController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-        toDo.setCellValueFactory(new PropertyValueFactory<NewTask, String>("combo"));
+        toDo.setCellValueFactory(new PropertyValueFactory<NewTask, String>("combo")); // initially put the task in the to do column
         completed.setCellValueFactory(new PropertyValueFactory<>(""));
-        inProgress.setCellValueFactory(new PropertyValueFactory<>(""));
         tableView.getSelectionModel().setCellSelectionEnabled(true);
         temp = tableView.getSelectionModel().getSelectedItems();
 
-        setDragAndDropHandlers();
+
 
         toDo.setCellFactory(column -> new TableCell<>() {
             @Override
@@ -75,27 +70,6 @@ public class ToDoController implements Initializable {
             }
         });
 
-        inProgress.setCellFactory(column -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null) {
-                    setStyle("");
-                } else {
-                    NewTask task = getTableView().getItems().get(getIndex());
-
-                    LocalDate currentDate = LocalDate.now();
-
-                    if (task.getDueDate() != null && task.getDueDate().isBefore(currentDate)){ // If the due date is past then the task will show up red
-                        setStyle("-fx-background-color: red;");
-                    } else {
-                        setStyle("");
-                    }
-                    setText(item);
-                }
-            }
-        });
 
         completed.setCellFactory(column -> new TableCell<>() {
             @Override
@@ -121,72 +95,60 @@ public class ToDoController implements Initializable {
 
     }
 
-    private void setDragAndDropHandlers() {
-        tableView.setRowFactory(tv -> {
-            TableRow<NewTask> row = new TableRow<>();
-
-            // Add drag detected event handler
-            row.setOnDragDetected(event -> {
-                if (!row.isEmpty()) {
-                    draggedRow = row;
-                    Dragboard db = row.startDragAndDrop(TransferMode.MOVE);
-                    ClipboardContent content = new ClipboardContent();
-                    content.putString(row.getItem().getTaskName());
-                    db.setContent(content);
-                    event.consume();
-                }
-            });
-
-            // Add drag over event handler
-            row.setOnDragOver(event -> {
-                if (event.getGestureSource() != row && event.getDragboard().hasString()) {
-                    event.acceptTransferModes(TransferMode.MOVE);
-                }
+    private void setDragAndDropHandlers(TableCell<NewTask, String> cell) {
+        cell.setOnDragDetected(event -> {
+            if (!cell.isEmpty()) {
+                Dragboard db = cell.startDragAndDrop(TransferMode.MOVE);
+                ClipboardContent content = new ClipboardContent();
+                content.putString(cell.getItem());
+                db.setContent(content);
                 event.consume();
-            });
+            }
+        });
 
-            // Add drag dropped event handler
-            row.setOnDragDropped(event -> {
-                Dragboard db = event.getDragboard();
-                boolean success = false;
+        cell.setOnDragOver(event -> {
+            if (event.getGestureSource() != cell && event.getDragboard().hasString()) {
+                event.acceptTransferModes(TransferMode.MOVE);
+            }
+            event.consume();
+        });
 
-                if (db.hasString() && draggedRow != null) {
-                    success = true;
+        cell.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            boolean success = false;
 
-                    // Move the task to the new position
-                    moveTaskToColumn(db.getString(), draggedRow, row);
-                }
+            if (db.hasString()) {
+                success = true;
 
-                event.setDropCompleted(success);
-                event.consume();
-            });
+                // Move the task to the new column
+                moveTaskToColumn(db.getString(), cell.getTableColumn());
+            }
 
-            return row;
+            event.setDropCompleted(success);
+            event.consume();
         });
     }
 
-    private void moveTaskToColumn(String taskName, TableRow<NewTask> sourceRow, TableRow<NewTask> targetRow) {
+    private void moveTaskToColumn(String taskName, TableColumn<NewTask, String> targetColumn) {
         NewTask taskToMove = tableView.getItems().stream()
                 .filter(task -> task.getTaskName().equals(taskName))
                 .findFirst()
                 .orElse(null);
 
         if (taskToMove != null) {
-            TableColumn<NewTask, String> targetColumn = getColumnForTableRow(targetRow);
+            // Update the task's status based on the target column
+            taskToMove.setStatus(targetColumn.getText());
 
-            if (targetColumn != null) {
-                // Update the task's status based on the target column
-                taskToMove.updateStatus(targetColumn.getId());
+            // Remove the task from its current position
+            tableView.getItems().remove(taskToMove);
 
-                // Add the task to the new column
-                targetColumn.getTableView().getItems().add(taskToMove);
+            // Add the task to the new position
+            tableView.getItems().add(taskToMove);
 
-                // Refresh the TableView
-                tableView.refresh();
-            }
+            // Refresh the TableView
+            tableView.refresh();
         }
     }
-
     private TableColumn<NewTask, String> getColumnForTableRow(TableRow<NewTask> row) {
         // Determine the target column based on the TableView columns
         if (row.getIndex() >= 0 && row.getIndex() < tableView.getItems().size()) {
@@ -198,8 +160,7 @@ public class ToDoController implements Initializable {
                     return toDo;
                 case "Completed":
                     return completed;
-                case "In Progress":
-                    return inProgress;
+
             }
         }
 
@@ -218,7 +179,7 @@ public class ToDoController implements Initializable {
 
         if (taskName != null && date != null) {
 
-            tableView.getItems().add(test);
+            toDo.getTableView().getItems().add(test);
             clearFields();
         }
     }
